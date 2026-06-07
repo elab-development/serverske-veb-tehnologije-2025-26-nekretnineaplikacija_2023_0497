@@ -6,7 +6,7 @@ use Illuminate\Http\Request;
 
 class PropertyController extends Controller
 {
-    // GET /api/properties — javno, svi mogu da vide
+    // GET /api/properties
     public function index()
     {
         $properties = Property::with('user')->get();
@@ -95,7 +95,7 @@ class PropertyController extends Controller
             return response()->json(['message' => 'Property not found'], 404);
         }
 
-        // Samo vlasnik može da briše
+        
         if ($property->user_id !== $request->user()->id) {
             return response()->json(['message' => 'Unauthorized'], 403);
         }
@@ -105,7 +105,7 @@ class PropertyController extends Controller
         return response()->json(['message' => 'Property deleted successfully']);
     }
 
-    // GET /api/my-properties — samo ulogovani korisnik vidi svoje
+    // GET /api/my-properties
     public function myProperties(Request $request)
     {
         $properties = Property::where('user_id', $request->user()->id)
