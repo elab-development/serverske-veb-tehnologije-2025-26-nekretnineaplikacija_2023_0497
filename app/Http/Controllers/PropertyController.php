@@ -3,18 +3,21 @@ namespace App\Http\Controllers;
 
 use App\Models\Property;
 use Illuminate\Http\Request;
+use App\Http\Resources\PropertyResource;
+use App\Http\Resources\PropertyCollection;
+
 
 class PropertyController extends Controller
 {
-    // GET /api/properties
+    
     public function index()
     {
         $properties = Property::with('user')->get();
 
-        return response()->json($properties);
+        return new PropertyCollection($properties);
     }
 
-    // GET /api/properties/{id}
+    
     public function show($id)
     {
         $property = Property::with(['user', 'features', 'inquiries'])->find($id);
@@ -23,10 +26,10 @@ class PropertyController extends Controller
             return response()->json(['message' => 'Property not found'], 404);
         }
 
-        return response()->json($property);
+        return new PropertyResource($property);
     }
 
-    // POST /api/properties
+    
     public function store(Request $request)
     {
         $validated = $request->validate([
@@ -52,7 +55,7 @@ class PropertyController extends Controller
         ], 201);
     }
 
-    // PUT /api/properties/{id}
+    
     public function update(Request $request, $id)
     {
         $property = Property::find($id);
@@ -61,7 +64,7 @@ class PropertyController extends Controller
             return response()->json(['message' => 'Property not found'], 404);
         }
 
-        // Samo vlasnik može da menja
+        
         if ($property->user_id !== $request->user()->id) {
             return response()->json(['message' => 'Unauthorized'], 403);
         }
@@ -86,7 +89,7 @@ class PropertyController extends Controller
         ]);
     }
 
-    // DELETE /api/properties/{id}
+    
     public function destroy(Request $request, $id)
     {
         $property = Property::find($id);
@@ -105,7 +108,7 @@ class PropertyController extends Controller
         return response()->json(['message' => 'Property deleted successfully']);
     }
 
-    // GET /api/my-properties
+    
     public function myProperties(Request $request)
     {
         $properties = Property::where('user_id', $request->user()->id)
