@@ -113,8 +113,8 @@ class PropertyController extends Controller
     {
         $properties = Property::where('user_id', $request->user()->id)
             ->with('features')
-            ->get();
+            ->paginate(10);
 
-        return response()->json($properties);
+        return new PropertyCollection($properties);
     }
 }
