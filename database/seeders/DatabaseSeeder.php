@@ -1,25 +1,24 @@
 <?php
-
 namespace Database\Seeders;
 
+use App\Models\Inquiry;
+use App\Models\Property;
 use App\Models\User;
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 
 class DatabaseSeeder extends Seeder
 {
-    use WithoutModelEvents;
-
-    /**
-     * Seed the application's database.
-     */
     public function run(): void
     {
-        // User::factory(10)->create();
-
-        User::factory()->create([
-            'name' => 'Test User',
-            'email' => 'test@example.com',
-        ]);
+        // Kreiraj 5 korisnika, svaki sa po 3 nekretnine
+        User::factory(5)->create()->each(function ($user) {
+            Property::factory(3)->create(['user_id' => $user->id])
+                ->each(function ($property) use ($user) {
+                    Inquiry::factory(2)->create([
+                        'property_id' => $property->id,
+                        'user_id'     => $user->id,
+                    ]);
+                });
+        });
     }
 }

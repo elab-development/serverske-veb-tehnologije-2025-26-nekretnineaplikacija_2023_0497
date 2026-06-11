@@ -8,7 +8,7 @@ use Illuminate\Http\Request;
 
 class InquiryController extends Controller
 {
-    //GET lista upita (admin vidi sve, kupac vidi svoje)
+    
     public function index(Request $request)
     {
         $user = $request->user();
@@ -24,7 +24,7 @@ class InquiryController extends Controller
         return response()->json($inquiries);
     }
 
-    //POST slanje upita za nekretninu
+    
     public function store(Request $request)
     {
         $validated = $request->validate([
@@ -32,7 +32,7 @@ class InquiryController extends Controller
             'message'     => 'required|string|max:1000',
         ]);
 
-        // Ne može da pošalje upit za svoju nekretninu
+        
         $property = Property::findOrFail($validated['property_id']);
 
         if ($property->user_id === $request->user()->id) {
@@ -54,14 +54,14 @@ class InquiryController extends Controller
         ], 201);
     }
 
-    // detalji jednog upita
+    
     public function show(Request $request, $id)
     {
         $inquiry = Inquiry::with(['user', 'property'])->findOrFail($id);
 
         $user = $request->user();
 
-        // Može videti samo admin, vlasnik upita, ili vlasnik nekretnine
+        
         if (
             $user->role !== 'admin' &&
             $inquiry->user_id !== $user->id &&
@@ -73,14 +73,14 @@ class InquiryController extends Controller
         return response()->json($inquiry);
     }
 
-    // PATCH /api/inquiries/{id}/status — promena statusa (agent/admin)
+    
     public function updateStatus(Request $request, $id)
     {
         $inquiry = Inquiry::findOrFail($id);
 
         $user = $request->user();
 
-        // Samo vlasnik nekretnine ili admin može menjati status
+        
         if (
             $user->role !== 'admin' &&
             $inquiry->property->user_id !== $user->id
@@ -100,7 +100,7 @@ class InquiryController extends Controller
         ]);
     }
 
-    // DELETE /api/inquiries/{id} — brisanje upita
+    
     public function destroy(Request $request, $id)
     {
         $inquiry = Inquiry::findOrFail($id);
