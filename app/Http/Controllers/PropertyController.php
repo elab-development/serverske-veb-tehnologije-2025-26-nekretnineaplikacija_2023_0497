@@ -5,6 +5,7 @@ use App\Models\Property;
 use Illuminate\Http\Request;
 use App\Http\Resources\PropertyResource;
 use App\Http\Resources\PropertyCollection;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 
 class PropertyController extends Controller
@@ -116,5 +117,48 @@ class PropertyController extends Controller
             ->paginate(10);
 
         return new PropertyCollection($properties);
+    }
+
+    
+    public function export(Request $request): StreamedResponse
+    {
+        $properties = Property::with('user')->get();
+
+        $headers = [
+            'Content-Type'        => 'text/csv',
+            'Content-Disposition' => 'attachment; filename="properties.csv"',
+        ];
+
+        $callback = function () use ($properties) {
+            $file = fopen('php://output', 'w');
+
+            
+            fputcsv($file, [
+                'ID', 'Title', 'Price', 'Location',
+                'Type', 'Bedrooms', 'Bathrooms',
+                'Area (sqm)', 'Status', 'Owner', 'Created At'
+            ]);
+
+            
+            foreach ($properties as $property) {
+                fputcsv($file, [
+                    $property->id,
+                    $property->title,
+                    $property->price,
+                    $property->location,
+                    $property->type,
+                    $property->bedrooms,
+                    $property->bathrooms,
+                    $property->area_sqm,
+                    $property->status,
+                    $property->user->name,
+                    $property->created_at->format('d.m.Y'),
+                ]);
+            }
+
+            fclose($file);
+        };
+
+        return response()->stream($callback, 200, $headers);
     }
 }
