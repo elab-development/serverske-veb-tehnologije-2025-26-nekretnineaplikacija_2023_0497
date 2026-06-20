@@ -73,6 +73,28 @@ class InquiryController extends Controller
         return response()->json($inquiry);
     }
 
+     public function update(Request $request, $id)
+    {
+        $inquiry = Inquiry::findOrFail($id);
+
+        $user = $request->user();
+
+        if ($user->role !== 'admin' && $inquiry->user_id !== $user->id) {
+            return response()->json(['message' => 'Zabranjen pristup.'], 403);
+        }
+
+        $validated = $request->validate([
+            'message' => 'required|string|max:1000',
+        ]);
+
+        $inquiry->update($validated);
+
+        return response()->json([
+            'message' => 'Upit uspešno izmenjen.',
+            'inquiry' => $inquiry->load(['user', 'property']),
+        ]);
+    }
+
     
     public function updateStatus(Request $request, $id)
     {
