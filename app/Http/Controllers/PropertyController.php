@@ -70,7 +70,7 @@ class PropertyController extends Controller
             return response()->json(['message' => 'Unauthorized'], 403);
         }
 
-        $request->validate([
+        $validated = $request->validate([
             'title'       => 'sometimes|string|max:255',
             'description' => 'sometimes|string',
             'price'       => 'sometimes|numeric|min:0',
@@ -82,7 +82,7 @@ class PropertyController extends Controller
             'status'      => 'nullable|in:available,sold,rented',
         ]);
 
-        $property->update($request->validated());
+        $property->update($validated);
 
         return response()->json([
             'message'  => 'Property updated successfully',
