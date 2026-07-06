@@ -27,7 +27,7 @@ class InquiryController extends Controller
     
     public function store(Request $request)
 {
-    // Samo buyer može slati upite
+    
     if ($request->user()->role !== 'buyer') {
         return response()->json([
             'message' => 'Samo kupci mogu slati upite.'
