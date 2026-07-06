@@ -26,33 +26,39 @@ class InquiryController extends Controller
 
     
     public function store(Request $request)
-    {
-        $validated = $request->validate([
-            'property_id' => 'required|exists:properties,id',
-            'message'     => 'required|string|max:1000',
-        ]);
-
-        
-        $property = Property::findOrFail($validated['property_id']);
-
-        if ($property->user_id === $request->user()->id) {
-            return response()->json([
-                'message' => 'Ne možete poslati upit za svoju nekretninu.',
-            ], 403);
-        }
-
-        $inquiry = Inquiry::create([
-            'user_id'     => $request->user()->id,
-            'property_id' => $validated['property_id'],
-            'message'     => $validated['message'],
-            'status'      => 'pending',
-        ]);
-
+{
+    // Samo buyer može slati upite
+    if ($request->user()->role !== 'buyer') {
         return response()->json([
-            'message' => 'Upit uspešno poslat.',
-            'inquiry' => $inquiry->load(['user', 'property']),
-        ], 201);
+            'message' => 'Samo kupci mogu slati upite.'
+        ], 403);
     }
+
+    $validated = $request->validate([
+        'property_id' => 'required|exists:properties,id',
+        'message'     => 'required|string|max:1000',
+    ]);
+
+    $property = Property::findOrFail($validated['property_id']);
+
+    if ($property->user_id === $request->user()->id) {
+        return response()->json([
+            'message' => 'Ne možete poslati upit za svoju nekretninu.',
+        ], 403);
+    }
+
+    $inquiry = Inquiry::create([
+        'user_id'     => $request->user()->id,
+        'property_id' => $validated['property_id'],
+        'message'     => $validated['message'],
+        'status'      => 'pending',
+    ]);
+
+    return response()->json([
+        'message' => 'Upit uspešno poslat.',
+        'inquiry' => $inquiry->load(['user', 'property']),
+    ], 201);
+}
 
     
     public function show(Request $request, $id)
@@ -122,7 +128,18 @@ class InquiryController extends Controller
         ]);
     }
 
-    
+    public function byProperty($id)
+{
+    $property = \App\Models\Property::find($id);
+
+    if (!$property) {
+        return response()->json(['message' => 'Property not found'], 404);
+    }
+
+    $inquiries = $property->inquiries()->with('user:id,name,email')->paginate(10);
+
+    return response()->json($inquiries);
+}
     public function destroy(Request $request, $id)
     {
         $inquiry = Inquiry::findOrFail($id);
